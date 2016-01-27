@@ -1,0 +1,7 @@
+/build
+/dist
+/env
+/dnspython
+/*.egg-info
+*.pyc
+*.pyo
