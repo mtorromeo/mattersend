@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 name = 'mattersend'
-version = '1.1'
+version = '1.2'
 url = 'https://github.com/mtorromeo/mattersend'
 description = "Sends messages to mattermost's incoming webhooks via CLI"
 
