@@ -9,15 +9,14 @@ Help
 ::
 
 	usage: mattersend [-h] [-V] [-C CONFIG] [-s SECTION] [-c CHANNEL] [-U URL]
-	                  [-u USERNAME] [-i ICON]
+	                  [-u USERNAME] [-i ICON] [-t [DIALECT]] [-n]
 	                  [message]
 
 	Sends messages to mattermost's incoming webhooks via CLI
 
 	positional arguments:
-	  message               The message to send or the attachment content if the
-	                        -a argument is specified. If not specified it will be
-	                        read from STDIN
+	  message               The message to send. If not specified it will be read
+	                        from STDIN
 
 	optional arguments:
 	  -h, --help            show this help message and exit
@@ -32,6 +31,11 @@ Help
 	  -u USERNAME, --username USERNAME
 	                        Username
 	  -i ICON, --icon ICON  Icon
+	  -t [DIALECT], --tabular [DIALECT]
+	                        Parse input as CSV and format is as a table (DIALECT
+	                        can be one of sniff, excel, excel-tab, unix)
+	  -n, --dry-run, --just-print
+	                        Don't send, just print the payload
 
 Configuration file
 ------------------
