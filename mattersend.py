@@ -54,8 +54,8 @@ def main():
                         .format(", ".join(dialects)))
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
-    parser.add_argument('message', nargs='?', help='The message to send. '
-                        'If not specified it will be read from STDIN')
+    parser.add_argument('-f', '--file', default='-',
+                        help="Read content from FILE. If - reads from standard input (DEFAULT: %(default)s)")
 
     args = parser.parse_args()
 
@@ -92,7 +92,11 @@ def main():
         sys.exit("Invalid dialect {}".format(args.tabular))
 
     # read message from CLI or stdin
-    message = args.message if args.message else sys.stdin.read()
+    if args.file == '-':
+        message = sys.stdin.read()
+    else:
+        with open(args.file, 'rU') as f:
+            message = f.read()
 
     if args.tabular:
         csvfile = StringIO(message.strip())

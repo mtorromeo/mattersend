@@ -9,14 +9,9 @@ Help
 ::
 
 	usage: mattersend [-h] [-V] [-C CONFIG] [-s SECTION] [-c CHANNEL] [-U URL]
-	                  [-u USERNAME] [-i ICON] [-t [DIALECT]] [-n]
-	                  [message]
+	                  [-u USERNAME] [-i ICON] [-t [DIALECT]] [-n] [-f FILE]
 
 	Sends messages to mattermost's incoming webhooks via CLI
-
-	positional arguments:
-	  message               The message to send. If not specified it will be read
-	                        from STDIN
 
 	optional arguments:
 	  -h, --help            show this help message and exit
@@ -36,6 +31,8 @@ Help
 	                        can be one of sniff, excel, excel-tab, unix)
 	  -n, --dry-run, --just-print
 	                        Don't send, just print the payload
+	  -f FILE, --file FILE  Read content from FILE. If - reads from standard input
+	                        (DEFAULT: -)
 
 Configuration file
 ------------------
