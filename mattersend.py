@@ -82,6 +82,14 @@ def build(options, args, message):
     return payload
 
 
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
 def main():
     import sys
     import os
@@ -118,6 +126,8 @@ def main():
                        help='Parse input as CSV and format it as a table (DIALECT can be one of %(choices)s)')
     group.add_argument('-y', '--syntax', default='auto')
 
+    parser.add_argument('-I', '--info', action='store_true',
+                        help='Include file information in message')
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
     parser.add_argument('-f', '--file', default='-',
@@ -167,6 +177,9 @@ def main():
         message = sys.stdin.read()
         args.syntax = None
     else:
+        (mime, _) = mimetypes.guess_type(args.file)
+        basename = os.path.basename(args.file)
+
         with open(args.file, 'rU') as f:
             message = f.read()
 
@@ -190,11 +203,9 @@ def main():
             )))
         message = "\n".join(message)
     elif args.syntax == 'auto':
-        (mime, _) = mimetypes.guess_type(args.file)
         if mime in mime_to_syntax:
             args.syntax = mime_to_syntax[mime]
         else:
-            basename = os.path.basename(args.file)
             (_, ext) = os.path.splitext(basename)
             if not ext:
                 ext = basename
@@ -205,6 +216,14 @@ def main():
 
     if args.syntax is not None:
         message = "```{}\n{}```".format('' if args.syntax == 'plain' else args.syntax, message)
+
+    if args.file != '-' and args.info:
+        statinfo = os.stat(args.file)
+        message = '''| Filename | Size | Mime |
+| --- | --- | --- |
+| {} | {} | {} |
+
+'''.format(basename, sizeof_fmt(statinfo.st_size), mime) + message
 
     payload = build(options, args, message)
 
