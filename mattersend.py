@@ -85,6 +85,14 @@ def main():
 
     if 'icon' in options:
         ioptname = 'icon_url' if '://' in options['icon'] else 'icon_emoji'
+
+        # workaround mattermost missing icon_emoji until implemented
+        if ioptname == 'icon_emoji' and options['icon'][0] == ':' and options['icon'][-1] == ':':
+            baseurl = options['url'].split('/hooks/', 1)
+            if len(baseurl) == 2:
+                ioptname = 'icon_url'
+                options['icon'] = "{}/static/images/emoji/{}.png".format(baseurl[0], options['icon'][1:-1])
+
         options[ioptname] = options['icon']
         del options['icon']
 

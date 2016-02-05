@@ -60,7 +60,15 @@ Example usage
 ::
 
 	echo "Hello world!" | mattersend -U https://mattermost.example.com/hooks/XXX
-	mattersend -U https://mattermost.example.com/hooks/XXX "Hello world!"
+
+	# you can omit -U with mattersend.conf
+	echo "Hello world!" | mattersend
+
+	# send file content
+	mattersend -f todo.txt
+
+	# table data
+	echo -e "ABC;DEF;GHI\nfoo;bar;baz" | mattersend -t
 
 LICENSE
 -------
