@@ -90,6 +90,17 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
+def md_table(data):
+    md = []
+    for i, row in enumerate(data):
+        if i == 1:
+            md.append("| --- " * len(row) + "|")
+        md.append("| {} |".format(" | ".join(
+            [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
+        )))
+    return "\n".join(md)
+
+
 def main():
     import sys
     import os
@@ -172,10 +183,12 @@ def main():
         options[ioptname] = options['icon']
         del options['icon']
 
+    if args.file == '-' or args.tabular:
+        args.syntax = None
+
     # read message from CLI or stdin
     if args.file == '-':
         message = sys.stdin.read()
-        args.syntax = None
     else:
         (mime, _) = mimetypes.guess_type(args.file)
         basename = os.path.basename(args.file)
@@ -189,19 +202,10 @@ def main():
         if args.tabular == 'sniff':
             sniffer = csv.Sniffer()
             dialect = sniffer.sniff(message)
-            has_header = sniffer.has_header(message)
         else:
             dialect = args.tabular
-            has_header = True
 
-        message = []
-        for i, row in enumerate(csv.reader(csvfile, dialect)):
-            if i == 1 and has_header:
-                message.append("| --- " * len(row) + "|")
-            message.append("| {} |".format(" | ".join(
-                [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
-            )))
-        message = "\n".join(message)
+        message = md_table(csv.reader(csvfile, dialect))
     elif args.syntax == 'auto':
         if mime in mime_to_syntax:
             args.syntax = mime_to_syntax[mime]
@@ -219,11 +223,10 @@ def main():
 
     if args.file != '-' and args.info:
         statinfo = os.stat(args.file)
-        message = '''| Filename | Size | Mime |
-| --- | --- | --- |
-| {} | {} | {} |
-
-'''.format(basename, sizeof_fmt(statinfo.st_size), mime) + message
+        message = md_table([
+            ['Filename', 'Size', 'Mime'],
+            [basename, sizeof_fmt(statinfo.st_size), mime],
+        ]) + "\n\n" + message
 
     payload = build(options, args, message)
 
