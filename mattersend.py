@@ -87,6 +87,9 @@ def main():
         options[ioptname] = options['icon']
         del options['icon']
 
+    if args.tabular and args.tabular not in dialects:
+        sys.exit("Invalid dialect {}".format(args.tabular))
+
     # read message from CLI or stdin
     message = args.message if args.message else sys.stdin.read()
 
@@ -98,8 +101,6 @@ def main():
             dialect = sniffer.sniff(message)
             has_header = sniffer.has_header(message)
         else:
-            if args.tabular not in dialects:
-                sys.exit("Invalid dialect {}".format(args.tabular))
             dialect = args.tabular
             has_header = True
 
