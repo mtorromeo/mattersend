@@ -68,6 +68,16 @@ ext_to_syntax = {
 }
 
 
+def detect_syntax(basename, mime):
+    if mime in mime_to_syntax:
+        return mime_to_syntax[mime]
+
+    (_, ext) = os.path.splitext(basename)
+    if not ext:
+        ext = basename
+    return ext_to_syntax[ext] if ext in ext_to_syntax else None
+
+
 def build(options, args, message):
     payload = {}
 
@@ -99,6 +109,12 @@ def md_table(data):
             [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
         )))
     return "\n".join(md)
+
+
+def md_code(code, syntax='plain'):
+    if syntax == 'plain':
+        syntax = ''
+    return "```{}\n{}```".format(syntax, code)
 
 
 def main():
@@ -200,26 +216,17 @@ def main():
         csvfile = StringIO(message.strip())
 
         if args.tabular == 'sniff':
-            sniffer = csv.Sniffer()
-            dialect = sniffer.sniff(message)
+            dialect = csv.Sniffer().sniff(message)
         else:
             dialect = args.tabular
 
         message = md_table(csv.reader(csvfile, dialect))
+
     elif args.syntax == 'auto':
-        if mime in mime_to_syntax:
-            args.syntax = mime_to_syntax[mime]
-        else:
-            (_, ext) = os.path.splitext(basename)
-            if not ext:
-                ext = basename
-            if ext in ext_to_syntax:
-                args.syntax = ext_to_syntax[ext]
-            else:
-                args.syntax = None
+        args.syntax = detect_syntax(basename, mime)
 
     if args.syntax is not None:
-        message = "```{}\n{}```".format('' if args.syntax == 'plain' else args.syntax, message)
+        message = md_code(message, args.syntax)
 
     if args.file != '-' and args.info:
         statinfo = os.stat(args.file)
@@ -235,7 +242,7 @@ def main():
         print(json.dumps(payload, sort_keys=True, indent=4))
         sys.exit(0)
 
-    r = requests.post(options['url'], data={'payload': json.dumps(payload, sort_keys=True)})
+    r = requests.post(options['url'], data={'payload': json.dumps(payload)})
 
     if r.status_code != 200:
         try:
