@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 name = 'mattersend'
-version = '1.0'
+version = '1.1'
 url = 'https://github.com/mtorromeo/mattersend'
 description = "Sends messages to mattermost's incoming webhooks via CLI"
 
@@ -27,11 +27,16 @@ def main():
     import argparse
     import configparser
     import json
+    import csv
 
     import setproctitle
     import requests
 
+    from io import StringIO
+
     setproctitle.setproctitle(name)
+    dialects = csv.list_dialects()
+    dialects.sort()
 
     # CLI arguments
     parser = argparse.ArgumentParser(prog=name, description=description)
@@ -43,6 +48,11 @@ def main():
     parser.add_argument('-U', '--url',      help='Mattermost webhook URL')
     parser.add_argument('-u', '--username', help='Username')
     parser.add_argument('-i', '--icon',     help='Icon')
+    parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff', nargs='?',
+                        help='Parse input as CSV and format is as a table (DIALECT can be one of sniff, {})'
+                        .format(", ".join(dialects)))
+    parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
+                        help="Don't send, just print the payload")
     parser.add_argument('message', nargs='?', help='The message to send. '
                         'If not specified it will be read from STDIN')
 
@@ -79,8 +89,37 @@ def main():
 
     # read message from CLI or stdin
     message = args.message if args.message else sys.stdin.read()
+
+    if args.tabular:
+        csvfile = StringIO(message.strip())
+
+        if args.tabular == 'sniff':
+            sniffer = csv.Sniffer()
+            dialect = sniffer.sniff(message)
+            has_header = sniffer.has_header(message)
+        else:
+            if args.tabular not in dialects:
+                sys.exit("Invalid dialect {}".format(args.tabular))
+            dialect = args.tabular
+            has_header = True
+
+        message = []
+        for i, row in enumerate(csv.reader(csvfile, dialect)):
+            if i == 1 and has_header:
+                message.append("| --- " * len(row) + "|")
+            message.append("| {} |".format(" | ".join(
+                [cell.replace("|", "&#124;").replace("\n", " ").replace("\r", " ") for cell in row]
+            )))
+        message = "\n".join(message)
+
     payload = build(options, args, message)
-    r = requests.post(options['url'], data={'payload': json.dumps(payload)})
+
+    if args.dry_run:
+        print("POST {}".format(options['url']))
+        print(json.dumps(payload, sort_keys=True, indent=4))
+        sys.exit(0)
+
+    r = requests.post(options['url'], data={'payload': json.dumps(payload, sort_keys=True)})
 
     if r.status_code != 200:
         try:

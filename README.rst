@@ -63,7 +63,7 @@ Example usage
 
 LICENSE
 -------
-Copyright (c) 2015 Massimiliano Torromeo
+Copyright (c) 2016 Massimiliano Torromeo
 
 mattersend is free software released under the terms of the BSD license.
 
