@@ -114,7 +114,7 @@ def main():
             if i == 1 and has_header:
                 message.append("| --- " * len(row) + "|")
             message.append("| {} |".format(" | ".join(
-                [cell.replace("|", "&#124;").replace("\n", " ").replace("\r", " ") for cell in row]
+                [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
             )))
         message = "\n".join(message)
 
