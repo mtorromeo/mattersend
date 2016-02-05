@@ -32,7 +32,7 @@ Help
 	                        Username
 	  -i ICON, --icon ICON  Icon
 	  -t [DIALECT], --tabular [DIALECT]
-	                        Parse input as CSV and format is as a table (DIALECT
+	                        Parse input as CSV and format it as a table (DIALECT
 	                        can be one of sniff, excel, excel-tab, unix)
 	  -n, --dry-run, --just-print
 	                        Don't send, just print the payload

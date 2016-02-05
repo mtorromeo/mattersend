@@ -49,7 +49,7 @@ def main():
     parser.add_argument('-u', '--username', help='Username')
     parser.add_argument('-i', '--icon',     help='Icon')
     parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff', nargs='?',
-                        help='Parse input as CSV and format is as a table (DIALECT can be one of sniff, {})'
+                        help='Parse input as CSV and format it as a table (DIALECT can be one of sniff, {})'
                         .format(", ".join(dialects)))
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
