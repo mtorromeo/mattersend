@@ -49,9 +49,9 @@ def main():
     parser.add_argument('-U', '--url',      help='Mattermost webhook URL')
     parser.add_argument('-u', '--username', help='Username')
     parser.add_argument('-i', '--icon',     help='Icon')
-    parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff', nargs='?',
-                        help='Parse input as CSV and format it as a table (DIALECT can be one of {})'
-                        .format(", ".join(dialects)))
+    parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff',
+                        nargs='?', choices=dialects,
+                        help='Parse input as CSV and format it as a table (DIALECT can be one of %(choices)s)')
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
     parser.add_argument('-f', '--file', default='-',
@@ -95,9 +95,6 @@ def main():
 
         options[ioptname] = options['icon']
         del options['icon']
-
-    if args.tabular and args.tabular not in dialects:
-        sys.exit("Invalid dialect {}".format(args.tabular))
 
     # read message from CLI or stdin
     if args.file == '-':
