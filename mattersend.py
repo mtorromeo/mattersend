@@ -6,6 +6,67 @@ version = '1.2'
 url = 'https://github.com/mtorromeo/mattersend'
 description = "Sends messages to mattermost's incoming webhooks via CLI"
 
+syntaxes = ['diff', 'apache', 'makefile', 'http', 'json', 'markdown',
+            'javascript', 'css', 'nginx', 'objectivec', 'python', 'xml',
+            'perl', 'bash', 'php', 'coffeescript', 'cs', 'cpp', 'sql', 'go',
+            'ruby', 'java', 'ini', 'latex', 'plain', 'auto']
+
+mime_to_syntax = {
+    'text/x-diff': 'diff',
+    'application/json': 'json',
+    'application/x-javascript': 'javascript',
+    'text/x-python': 'python',
+    'application/xml': 'xml',
+    'text/x-perl': 'perl',
+    'text/x-sh': 'bash',
+    'text/x-csrc': 'cpp',
+    'text/x-chdr': 'cpp',
+    'text/x-c++src': 'cpp',
+    'text/x-c++hdr': 'cpp',
+    'text/x-c': 'cpp',
+    'application/x-sql': 'sql',
+    'application/x-ruby': 'ruby',
+    'text/x-java-source': 'java',
+    'application/x-latex': 'latex',
+}
+
+ext_to_syntax = {
+    'Makefile': 'makefile',
+    '.mk': 'makefile',
+    '.htaccess': 'apache',
+    '.json': 'json',
+    '.md': 'markdown',
+    '.js': 'javascript',
+    '.css': 'css',
+    '.m': 'objectivec',
+    '.py': 'python',
+    '.xml': 'xml',
+    '.pl': 'perl',
+    '.sh': 'bash',
+    '.php': 'php',
+    '.phtml': 'php',
+    '.phps': 'php',
+    '.php3': 'php',
+    '.php4': 'php',
+    '.php5': 'php',
+    '.php7': 'php',
+    '.coffee': 'coffeescript',
+    '.cs': 'cs',
+    '.c': 'cpp',
+    '.cc': 'cpp',
+    '.cxx': 'cpp',
+    '.cpp': 'cpp',
+    '.h': 'cpp',
+    '.hh': 'cpp',
+    '.dic': 'cpp',
+    '.sql': 'sql',
+    '.go': 'go',
+    '.rb': 'ruby',
+    '.java': 'java',
+    '.ini': 'ini',
+    '.latex': 'latex',
+}
+
 
 def build(options, args, message):
     payload = {}
@@ -28,6 +89,7 @@ def main():
     import configparser
     import json
     import csv
+    import mimetypes
 
     import setproctitle
     import requests
@@ -49,9 +111,13 @@ def main():
     parser.add_argument('-U', '--url',      help='Mattermost webhook URL')
     parser.add_argument('-u', '--username', help='Username')
     parser.add_argument('-i', '--icon',     help='Icon')
-    parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff',
-                        nargs='?', choices=dialects,
-                        help='Parse input as CSV and format it as a table (DIALECT can be one of %(choices)s)')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff',
+                       nargs='?', choices=dialects,
+                       help='Parse input as CSV and format it as a table (DIALECT can be one of %(choices)s)')
+    group.add_argument('-y', '--syntax', default='auto')
+
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
     parser.add_argument('-f', '--file', default='-',
@@ -99,6 +165,7 @@ def main():
     # read message from CLI or stdin
     if args.file == '-':
         message = sys.stdin.read()
+        args.syntax = None
     else:
         with open(args.file, 'rU') as f:
             message = f.read()
@@ -122,6 +189,22 @@ def main():
                 [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
             )))
         message = "\n".join(message)
+    elif args.syntax == 'auto':
+        (mime, _) = mimetypes.guess_type(args.file)
+        if mime in mime_to_syntax:
+            args.syntax = mime_to_syntax[mime]
+        else:
+            basename = os.path.basename(args.file)
+            (_, ext) = os.path.splitext(basename)
+            if not ext:
+                ext = basename
+            if ext in ext_to_syntax:
+                args.syntax = ext_to_syntax[ext]
+            else:
+                args.syntax = None
+
+    if args.syntax is not None:
+        message = "```{}\n{}```".format('' if args.syntax == 'plain' else args.syntax, message)
 
     payload = build(options, args, message)
 

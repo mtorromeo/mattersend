@@ -9,7 +9,8 @@ Help
 ::
 
 	usage: mattersend [-h] [-V] [-C CONFIG] [-s SECTION] [-c CHANNEL] [-U URL]
-	                  [-u USERNAME] [-i ICON] [-t [DIALECT]] [-n] [-f FILE]
+	                  [-u USERNAME] [-i ICON] [-t [DIALECT] | -y SYNTAX] [-n]
+	                  [-f FILE]
 
 	Sends messages to mattermost's incoming webhooks via CLI
 
@@ -29,6 +30,7 @@ Help
 	  -t [DIALECT], --tabular [DIALECT]
 	                        Parse input as CSV and format it as a table (DIALECT
 	                        can be one of sniff, excel, excel-tab, unix)
+	  -y SYNTAX, --syntax SYNTAX
 	  -n, --dry-run, --just-print
 	                        Don't send, just print the payload
 	  -f FILE, --file FILE  Read content from FILE. If - reads from standard input
