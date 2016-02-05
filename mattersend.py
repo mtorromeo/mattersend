@@ -37,6 +37,7 @@ def main():
     setproctitle.setproctitle(name)
     dialects = csv.list_dialects()
     dialects.sort()
+    dialects.insert(0, 'sniff')
 
     # CLI arguments
     parser = argparse.ArgumentParser(prog=name, description=description)
@@ -49,7 +50,7 @@ def main():
     parser.add_argument('-u', '--username', help='Username')
     parser.add_argument('-i', '--icon',     help='Icon')
     parser.add_argument('-t', '--tabular', metavar='DIALECT', const='sniff', nargs='?',
-                        help='Parse input as CSV and format it as a table (DIALECT can be one of sniff, {})'
+                        help='Parse input as CSV and format it as a table (DIALECT can be one of {})'
                         .format(", ".join(dialects)))
     parser.add_argument('-n', '--dry-run', '--just-print', action='store_true',
                         help="Don't send, just print the payload")
