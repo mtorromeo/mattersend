@@ -12,7 +12,7 @@ import mimetypes
 from io import StringIO
 
 name = 'mattersend'
-version = '1.3'
+version = '1.4'
 url = 'https://github.com/mtorromeo/mattersend'
 description = "Sends messages to mattermost's incoming webhooks via CLI"
 
