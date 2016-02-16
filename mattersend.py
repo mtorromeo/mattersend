@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import sys
+import os
+import argparse
+import configparser
+import json
+import csv
+import mimetypes
+
+from io import StringIO
+
 name = 'mattersend'
 version = '1.3'
 url = 'https://github.com/mtorromeo/mattersend'
@@ -35,7 +45,6 @@ ext_to_syntax = {
     '.mk': 'makefile',
     '.htaccess': 'apache',
     '.json': 'json',
-    '.md': 'markdown',
     '.js': 'javascript',
     '.css': 'css',
     '.m': 'objectivec',
@@ -118,18 +127,8 @@ def md_code(code, syntax='plain'):
 
 
 def main():
-    import sys
-    import os
-    import argparse
-    import configparser
-    import json
-    import csv
-    import mimetypes
-
     import setproctitle
     import requests
-
-    from io import StringIO
 
     setproctitle.setproctitle(name)
     dialects = csv.list_dialects()
