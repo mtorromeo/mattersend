@@ -115,7 +115,7 @@ def md_table(data):
         if i == 1:
             md.append("| --- " * len(row) + "|")
         md.append("| {} |".format(" | ".join(
-            [cell.replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
+            [str(cell).replace("|", "❘").replace("\n", " ").replace("\r", " ") for cell in row]
         )))
     return "\n".join(md)
 
