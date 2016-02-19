@@ -87,7 +87,7 @@ def detect_syntax(basename, mime):
     return ext_to_syntax[ext] if ext in ext_to_syntax else None
 
 
-def build(options, args, message):
+def build(options, message):
     payload = {}
 
     # build request
@@ -128,7 +128,6 @@ def md_code(code, syntax='plain'):
 
 def main():
     import setproctitle
-    import requests
 
     setproctitle.setproctitle(name)
     dialects = csv.list_dialects()
@@ -161,25 +160,48 @@ def main():
 
     args = parser.parse_args()
 
-    # CONFIG file
-    config = configparser.SafeConfigParser()
+    if args.file == '-':
+        message = sys.stdin.read()
+        filename = None
+    else:
+        message = ''
+        filename = args.file
+
     try:
-        if args.config:
-            config.read(args.config)
-        else:
-            config.read(["/etc/{}.conf".format(name), os.path.expanduser("~/.{}.conf".format(name))])
+        payload = send(args.channel, message, filename, args.url,
+                       args.username, args.icon, args.syntax, args.tabular,
+                       args.info, args.dry_run, args.section, name,
+                       args.config)
     except configparser.Error as e:
         sys.exit(e.message)
+
+    if args.dry_run:
+        print(payload)
+
+
+def send(channel, message='', filename=False, url=None, username=None,
+         icon=None, syntax='auto', tabular=False, fileinfo=False,
+         just_return=False, config_section='DEFAULT',
+         config_name='mattersend', config_file=None):
+    import requests
+
+    # CONFIG file
+    config = configparser.ConfigParser()
+
+    if config_file:
+        config.read(config_file)
+    elif config_name:
+        config.read(["/etc/{}.conf".format(config_name), os.path.expanduser("~/.{}.conf".format(config_name))])
 
     # merge config file with cli arguments
     options = {}
     for opt in ('channel', 'url', 'username', 'icon'):
-        arg = getattr(args, opt)
+        arg = locals()[opt]
         if arg:
             options[opt] = arg
-        elif opt in config[args.section]:
-            options[opt] = config[args.section][opt]
-        elif args.section != 'DEFAULT' and opt in config['DEFAULT']:
+        elif opt in config[config_section]:
+            options[opt] = config[config_section][opt]
+        elif config_section != 'DEFAULT' and opt in config['DEFAULT']:
             options[opt] = config['DEFAULT'][opt]
 
     if 'url' not in options:
@@ -198,50 +220,51 @@ def main():
         options[ioptname] = options['icon']
         del options['icon']
 
-    if args.file == '-' or args.tabular:
-        args.syntax = None
+    if not filename or tabular:
+        syntax = None
 
     # read message from CLI or stdin
-    if args.file == '-':
-        message = sys.stdin.read()
-    else:
-        (mime, _) = mimetypes.guess_type(args.file)
-        basename = os.path.basename(args.file)
+    if filename:
+        (mime, _) = mimetypes.guess_type(filename)
+        basename = os.path.basename(filename)
 
-        with open(args.file, 'rU') as f:
-            message = f.read()
+        with open(filename, 'rU') as f:
+            filecontents = f.read()
+            if message:
+                message += "\n\n" + filecontents
+            else:
+                message = filecontents
 
-    if args.tabular:
+    if tabular:
         csvfile = StringIO(message.strip())
 
-        if args.tabular == 'sniff':
+        if tabular == 'sniff':
             dialect = csv.Sniffer().sniff(message)
         else:
-            dialect = args.tabular
+            dialect = tabular
 
         message = md_table(csv.reader(csvfile, dialect))
 
-    elif args.syntax == 'auto':
-        args.syntax = detect_syntax(basename, mime)
+    elif syntax == 'auto':
+        syntax = detect_syntax(basename, mime)
 
-    if args.syntax is not None:
-        message = md_code(message, args.syntax)
+    if syntax is not None:
+        message = md_code(message, syntax)
 
-    if args.file != '-' and args.info:
-        statinfo = os.stat(args.file)
+    if filename and fileinfo:
+        statinfo = os.stat(filename)
         message = md_table([
             ['Filename', 'Size', 'Mime'],
             [basename, sizeof_fmt(statinfo.st_size), mime],
         ]) + "\n\n" + message
 
-    payload = build(options, args, message)
+    payload = build(options, message.strip())
+    payload = json.dumps(payload, sort_keys=True, indent=4)
 
-    if args.dry_run:
-        print("POST {}".format(options['url']))
-        print(json.dumps(payload, sort_keys=True, indent=4))
-        sys.exit(0)
+    if just_return:
+        return "POST {}\n{}".format(options['url'], payload)
 
-    r = requests.post(options['url'], data={'payload': json.dumps(payload)})
+    r = requests.post(options['url'], data={'payload': payload})
 
     if r.status_code != 200:
         try:
