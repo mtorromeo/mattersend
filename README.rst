@@ -85,6 +85,6 @@ Contacts
 
 * Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
 
-.. |build-status| .. image:: https://travis-ci.org/mtorromeo/mattersend.svg?branch=master
+.. |build-status| image:: https://travis-ci.org/mtorromeo/mattersend.svg?branch=master
    :target: https://travis-ci.org/mtorromeo/mattersend
 	 :alt: Build status
