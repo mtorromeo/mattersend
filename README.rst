@@ -1,5 +1,5 @@
-mattersend
-==========
+mattersend |build-status|
+=========================
 
 CLI tool to send messages to the Incoming webhook of mattermost (http://www.mattermost.org/).
 
@@ -84,3 +84,7 @@ Contacts
 --------
 
 * Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
+
+.. |build-status| .. image:: https://travis-ci.org/mtorromeo/mattersend.svg?branch=master
+   :target: https://travis-ci.org/mtorromeo/mattersend
+	 :alt: Build status
