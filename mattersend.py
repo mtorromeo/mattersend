@@ -172,8 +172,8 @@ def main():
                        args.username, args.icon, args.syntax, args.tabular,
                        args.info, args.dry_run, args.section, name,
                        args.config)
-    except configparser.Error as e:
-        sys.exit(e.message)
+    except (configparser.Error, TypeError, RuntimeError) as e:
+        sys.exit(str(e))
 
     if args.dry_run:
         print(payload)
@@ -205,7 +205,7 @@ def send(channel, message='', filename=False, url=None, username=None,
             options[opt] = config['DEFAULT'][opt]
 
     if 'url' not in options:
-        raise KeyError('Missing mattermost webhook URL')
+        raise TypeError('Missing mattermost webhook URL')
 
     if 'icon' in options:
         ioptname = 'icon_url' if '://' in options['icon'] else 'icon_emoji'
