@@ -1,5 +1,7 @@
 language: python
 python:
   - 3.5
-install: "pip install ."
-script: "python setup.py nosetests"
+install:
+  - pip install .
+  - pip install pyfakefs
+script: nosetests
