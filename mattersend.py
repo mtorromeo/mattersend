@@ -205,7 +205,7 @@ def send(channel, message='', filename=False, url=None, username=None,
             options[opt] = config['DEFAULT'][opt]
 
     if 'url' not in options:
-        sys.exit('Missing mattermost webhook URL')
+        raise KeyError('Missing mattermost webhook URL')
 
     if 'icon' in options:
         ioptname = 'icon_url' if '://' in options['icon'] else 'icon_emoji'
@@ -271,7 +271,7 @@ def send(channel, message='', filename=False, url=None, username=None,
             r = json.loads(r.text)
         except json.decoder.JSONDecodeError:
             r = {'message': r.text, 'status_code': r.status_code}
-        sys.exit("{} ({})".format(r['message'], r['status_code']))
+        raise RuntimeError("{} ({})".format(r['message'], r['status_code']))
 
 if __name__ == '__main__':
     main()

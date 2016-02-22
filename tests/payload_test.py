@@ -1,5 +1,13 @@
 import mattersend
 from pyfakefs import fake_filesystem_unittest
+from unittest import mock
+
+
+class MockResponse:
+    def __init__(self, url, data):
+        self.text = 'test'
+        if url.endswith('/fail'):
+            self.status_code = 502
 
 
 class PayloadTest(fake_filesystem_unittest.TestCase):
@@ -12,7 +20,9 @@ url=https://chat.mydomain.com/hooks/abcdefghi123456
 icon = :angry:
 username = AngryBot''')
         self.fs.CreateFile('/etc/mime.types', contents='text/x-diff diff')
-        self.fs.CreateFile('/home/test/source.coffee')
+        self.fs.CreateFile('/home/test/source.coffee', contents='x' * 5000)
+        self.fs.CreateFile('/home/test/source.csv',
+                           contents='abc,def\nfoo,bar')
         self.fs.CreateFile('/home/test/source.diff')
         self.fs.CreateFile('/home/test/Makefile')
 
@@ -61,8 +71,8 @@ username = AngryBot''')
         self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
-    "text": "```coffeescript\n```"
-}""")
+    "text": "```coffeescript\n%s```"
+}""" % ('x' * 5000))
 
     def test_syntax_by_mime(self):
         payload = mattersend.send(channel='town-square',
@@ -100,12 +110,49 @@ username = AngryBot''')
 
     def test_fileinfo(self):
         payload = mattersend.send(channel='town-square',
-                                  filename='/etc/mime.types',
+                                  filename='/home/test/source.coffee',
                                   fileinfo=True,
                                   just_return=True)
 
         self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
-    "text": "| Filename | Size | Mime |\n| --- | --- | --- |\n| mime.types | 16.0B | None |\n\ntext/x-diff diff"
+    "text": "| Filename | Size | Mime |\n| --- | --- | --- |\n| source.coffee | 4.9KiB | None |\n\n```coffeescript\n%s```"
+}""" % ('x' * 5000))
+
+    def test_csv(self):
+        payload = mattersend.send(channel='town-square',
+                                  filename='/home/test/source.csv',
+                                  tabular='sniff',
+                                  just_return=True)
+
+        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+{
+    "channel": "town-square",
+    "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
 }""")
+
+    def test_csv_dialect(self):
+        payload = mattersend.send(channel='town-square',
+                                  filename='/home/test/source.csv',
+                                  tabular='excel',
+                                  just_return=True)
+
+        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+{
+    "channel": "town-square",
+    "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
+}""")
+
+    @mock.patch('requests.post', side_effect=MockResponse)
+    def test_send(self, mock_post):
+        payload = mattersend.send(channel='town-square',
+                                  message='test message',
+                                  url='http://chat.net/hooks/abdegh12')
+
+    @mock.patch('requests.post', side_effect=MockResponse)
+    def test_send(self, mock_post):
+        with self.assertRaises(RuntimeError):
+            payload = mattersend.send(channel='town-square',
+                                      message='test message',
+                                      url='http://chat.net/hooks/fail')
