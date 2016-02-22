@@ -1,5 +1,5 @@
-mattersend |build-status|
-=========================
+mattersend |build-status| |cover-status|
+========================================
 
 CLI tool to send messages to the Incoming webhook of mattermost (http://www.mattermost.org/).
 
@@ -87,4 +87,6 @@ Contacts
 
 .. |build-status| image:: https://travis-ci.org/mtorromeo/mattersend.svg?branch=master
    :target: https://travis-ci.org/mtorromeo/mattersend
-	 :alt: Build status
+   :alt: Build status
+.. |cover-status| image:: https://coveralls.io/repos/github/mtorromeo/mattersend/badge.svg?branch=master
+   :target: https://coveralls.io/github/mtorromeo/mattersend?branch=master
