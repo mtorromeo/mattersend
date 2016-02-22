@@ -17,7 +17,7 @@ setup(
         ],
     },
     install_requires=["setproctitle", "requests"],
-    tests_require=["nose", "pyfakefs"],
+    tests_require=["nose", "coverage", "pyfakefs"],
     test_suite="nose.collector",
     version=mattersend.version,
     description=mattersend.description,
