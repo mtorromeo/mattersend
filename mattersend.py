@@ -127,9 +127,12 @@ def md_code(code, syntax='plain'):
 
 
 def main():
-    import setproctitle
+    try:
+        import setproctitle
+        setproctitle.setproctitle(name)
+    except ImportError:
+        pass
 
-    setproctitle.setproctitle(name)
     dialects = csv.list_dialects()
     dialects.sort()
     dialects.insert(0, 'sniff')
