@@ -4,12 +4,16 @@
 import sys
 import os
 import argparse
-import configparser
 import json
 import csv
 import mimetypes
 
 from io import StringIO
+
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 name = 'mattersend'
 version = '2.0'
@@ -196,16 +200,16 @@ def send(channel, message='', filename=False, url=None, username=None,
     elif config_name:
         config.read(["/etc/{}.conf".format(config_name), os.path.expanduser("~/.{}.conf".format(config_name))])
 
+    config = dict(config.items(config_section))
+
     # merge config file with cli arguments
     options = {}
     for opt in ('channel', 'url', 'username', 'icon'):
         arg = locals()[opt]
         if arg:
             options[opt] = arg
-        elif opt in config[config_section]:
-            options[opt] = config[config_section][opt]
-        elif config_section != 'DEFAULT' and opt in config['DEFAULT']:
-            options[opt] = config['DEFAULT'][opt]
+        elif opt in config:
+            options[opt] = config[opt]
 
     if 'url' not in options:
         raise TypeError('Missing mattermost webhook URL')
@@ -231,8 +235,8 @@ def send(channel, message='', filename=False, url=None, username=None,
         (mime, _) = mimetypes.guess_type(filename)
         basename = os.path.basename(filename)
 
-        with open(filename, 'rU') as f:
-            filecontents = f.read()
+        with open(filename, 'rUb') as f:
+            filecontents = f.read().decode('utf-8')
             if message:
                 message += "\n\n" + filecontents
             else:
@@ -272,7 +276,7 @@ def send(channel, message='', filename=False, url=None, username=None,
     if r.status_code != 200:
         try:
             r = json.loads(r.text)
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             r = {'message': r.text, 'status_code': r.status_code}
         raise RuntimeError("{} ({})".format(r['message'], r['status_code']))
 

@@ -1,6 +1,18 @@
+import re
 import mattersend
 from pyfakefs import fake_filesystem_unittest
-from unittest import mock
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
+
+def normalize_payload(payload):
+    lines = []
+    for line in payload.splitlines():
+        lines.append(line.rstrip())
+    return "\n".join(lines)
 
 
 class MockResponse:
@@ -31,7 +43,8 @@ username = AngryBot''')
                                   message='test message',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "test message"
@@ -43,7 +56,8 @@ username = AngryBot''')
                                   config_section='angrybot',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "icon_url": "https://chat.mydomain.com/static/images/emoji/angry.png",
@@ -57,7 +71,8 @@ username = AngryBot''')
                                   url='http://chat.net/hooks/abdegh12',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST http://chat.net/hooks/abdegh12
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST http://chat.net/hooks/abdegh12
 {
     "channel": "town-square",
     "text": "test message"
@@ -68,7 +83,8 @@ username = AngryBot''')
                                   filename='/home/test/source.coffee',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "```coffeescript\n%s```"
@@ -79,7 +95,8 @@ username = AngryBot''')
                                   filename='/home/test/source.diff',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "```diff\n```"
@@ -90,7 +107,8 @@ username = AngryBot''')
                                   filename='/home/test/Makefile',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "```makefile\n```"
@@ -102,7 +120,8 @@ username = AngryBot''')
                                   message='test message',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "test message\n\ntext/x-diff diff"
@@ -114,7 +133,8 @@ username = AngryBot''')
                                   fileinfo=True,
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "| Filename | Size | Mime |\n| --- | --- | --- |\n| source.coffee | 4.9KiB | None |\n\n```coffeescript\n%s```"
@@ -126,7 +146,8 @@ username = AngryBot''')
                                   tabular='sniff',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
@@ -138,7 +159,8 @@ username = AngryBot''')
                                   tabular='excel',
                                   just_return=True)
 
-        self.assertEqual(payload, r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
+        self.assertEqual(normalize_payload(payload),
+                         r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
     "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
