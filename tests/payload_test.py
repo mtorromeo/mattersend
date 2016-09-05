@@ -37,6 +37,7 @@ username = AngryBot''')
                            contents='abc,def\nfoo,bar')
         self.fs.CreateFile('/home/test/source.diff')
         self.fs.CreateFile('/home/test/Makefile')
+        self.maxDiff = 20000
 
     def test_simple_1(self):
         payload = mattersend.send(channel='town-square',
@@ -83,12 +84,20 @@ username = AngryBot''')
                                   filename='/home/test/source.coffee',
                                   just_return=True)
 
+        content = r"```coffeescript\n%s```" % ('x' * 5000,)
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "%s",
+            "text": "%s",
+            "title": "source.coffee"
+        }
+    ],
     "channel": "town-square",
-    "text": "```coffeescript\n%s```"
-}""" % ('x' * 5000))
+    "text": ""
+}""" % (content[:3501], content[:3501]))
 
     def test_syntax_by_mime(self):
         payload = mattersend.send(channel='town-square',
@@ -98,8 +107,15 @@ username = AngryBot''')
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "```diff\n```",
+            "text": "```diff\n```",
+            "title": "source.diff"
+        }
+    ],
     "channel": "town-square",
-    "text": "```diff\n```"
+    "text": ""
 }""")
 
     def test_syntax_mk(self):
@@ -110,8 +126,15 @@ username = AngryBot''')
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "```makefile\n```",
+            "text": "```makefile\n```",
+            "title": "Makefile"
+        }
+    ],
     "channel": "town-square",
-    "text": "```makefile\n```"
+    "text": ""
 }""")
 
     def test_filename_and_message(self):
@@ -123,8 +146,15 @@ username = AngryBot''')
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "text/x-diff diff",
+            "text": "text/x-diff diff",
+            "title": "mime.types"
+        }
+    ],
     "channel": "town-square",
-    "text": "test message\n\ntext/x-diff diff"
+    "text": "test message"
 }""")
 
     def test_fileinfo(self):
@@ -133,12 +163,32 @@ username = AngryBot''')
                                   fileinfo=True,
                                   just_return=True)
 
+        content = r"```coffeescript\n%s```" % ('x' * 5000,)
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "%s",
+            "fields": [
+                {
+                    "short": true,
+                    "title": "Size",
+                    "value": "4.9KiB"
+                },
+                {
+                    "short": true,
+                    "title": "Mime",
+                    "value": "None"
+                }
+            ],
+            "text": "%s",
+            "title": "source.coffee"
+        }
+    ],
     "channel": "town-square",
-    "text": "| Filename | Size | Mime |\n| --- | --- | --- |\n| source.coffee | 4.9KiB | None |\n\n```coffeescript\n%s```"
-}""" % ('x' * 5000))
+    "text": ""
+}""" % (content[:3501], content[:3501]))
 
     def test_csv(self):
         payload = mattersend.send(channel='town-square',
@@ -149,8 +199,15 @@ username = AngryBot''')
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "| abc | def |\n| --- | --- |\n| foo | bar |",
+            "text": "| abc | def |\n| --- | --- |\n| foo | bar |",
+            "title": "source.csv"
+        }
+    ],
     "channel": "town-square",
-    "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
+    "text": ""
 }""")
 
     def test_csv_dialect(self):
@@ -162,8 +219,15 @@ username = AngryBot''')
         self.assertEqual(normalize_payload(payload),
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
+    "attachments": [
+        {
+            "fallback": "| abc | def |\n| --- | --- |\n| foo | bar |",
+            "text": "| abc | def |\n| --- | --- |\n| foo | bar |",
+            "title": "source.csv"
+        }
+    ],
     "channel": "town-square",
-    "text": "| abc | def |\n| --- | --- |\n| foo | bar |"
+    "text": ""
 }""")
 
     @mock.patch('requests.post', side_effect=MockResponse)
@@ -178,3 +242,20 @@ username = AngryBot''')
             payload = mattersend.send(channel='town-square',
                                       message='test message',
                                       url='http://chat.net/hooks/fail')
+
+    def test_attachment(self):
+        message = mattersend.Message()
+        message.text = 'test_message'
+
+        attachment = mattersend.Attachment('test_attachment')
+        message.attachments.append(attachment)
+        payload = message.get_payload()
+        self.assertEqual(normalize_payload(payload), r"""{
+    "attachments": [
+        {
+            "fallback": "test_attachment",
+            "text": "test_attachment"
+        }
+    ],
+    "text": "test_message"
+}""")
