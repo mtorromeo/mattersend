@@ -61,7 +61,7 @@ username = AngryBot''')
                          r"""POST https://chat.mydomain.com/hooks/abcdefghi123456
 {
     "channel": "town-square",
-    "icon_url": "https://chat.mydomain.com/static/images/emoji/angry.png",
+    "icon_url": "https://chat.mydomain.com/static/emoji/1f620.png",
     "text": "test message",
     "username": "AngryBot"
 }""")
